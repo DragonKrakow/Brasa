@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BRASA — Carnes & Churrasco</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Fraunces:ital,wght@0,400;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --char:#1c1411;
+    --char2:#241a16;
+    --ember:#c0392b;
+    --ember-bright:#e8533e;
+    --gold:#d8a13c;
+    --cream:#f3e9dc;
+    --cream-dim:#cdbfae;
+    --line:rgba(243,233,220,0.12);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--char);
+    color:var(--cream);
+    font-family:'Inter',sans-serif;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--ember);color:var(--cream);}
+
+  h1,h2,h3,.display{
+    font-family:'Anton',sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.01em;
+  }
+  .script{
+    font-family:'Fraunces',serif;
+    font-style:italic;
+    font-weight:500;
+    text-transform:none;
+    letter-spacing:0;
+  }
+
+  /* === AGE GATE === */
+  #ageGate{
+    position:fixed;inset:0;z-index:999;
+    background:radial-gradient(ellipse at center, #2a1a14 0%, #100a08 75%);
+    display:flex;align-items:center;justify-content:center;
+    padding:24px;
+    transition:opacity .5s ease, visibility .5s ease;
+  }
+  #ageGate.hidden{opacity:0;visibility:hidden;pointer-events:none;}
+  .gate-card{
+    max-width:420px;width:100%;
+    text-align:center;
+    border:1px solid var(--line);
+    background:rgba(28,20,17,0.6);
+    padding:48px 32px;
+    position:relative;
+  }
+  .gate-card::before, .gate-card::after{
+    content:"";
+    position:absolute;
+    width:28px;height:28px;
+    border:2px solid var(--gold);
+  }
+  .gate-card::before{top:-1px;left:-1px;border-right:none;border-bottom:none;}
+  .gate-card::after{bottom:-1px;right:-1px;border-left:none;border-top:none;}
+  .gate-ember{
+    font-size:13px;letter-spacing:0.3em;color:var(--ember-bright);
+    margin-bottom:18px;font-weight:600;
+  }
+  .gate-card h2{font-size:clamp(28px,6vw,38px);line-height:1.05;margin-bottom:14px;}
+  .gate-card p{color:var(--cream-dim);font-size:14.5px;line-height:1.6;margin-bottom:30px;}
+  .gate-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+  .btn{
+    font-family:'Inter',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    padding:15px 28px;
+    border:none;
+    cursor:pointer;
+    transition:transform .2s ease, background .2s ease;
+  }
+  .btn-primary{background:var(--ember);color:var(--cream);}
+  .btn-primary:hover{background:var(--ember-bright);transform:translateY(-2px);}
+  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--cream-dim);}
+  .btn-ghost:hover{border-color:var(--cream-dim);color:var(--cream);}
+  .gate-fine{margin-top:22px;font-size:11px;color:#7a6a5c;letter-spacing:0.03em;}
+  .gate-denied{display:none;margin-top:18px;color:var(--ember-bright);font-size:13px;}
+
+  /* === NAV === */
+  header{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:20px 5%;
+    background:linear-gradient(to bottom, rgba(20,14,11,0.9), transparent);
+  }
+  .logo{
+    display:flex;align-items:center;gap:10px;
+    font-family:'Anton',sans-serif;font-size:26px;letter-spacing:0.04em;color:var(--cream);
+    text-decoration:none;
+  }
+  .logo .ember-dot{
+    width:9px;height:9px;border-radius:50%;
+    background:var(--ember-bright);
+    box-shadow:0 0 10px 2px var(--ember-bright);
+  }
+  nav ul{display:flex;gap:34px;list-style:none;}
+  nav a{
+    color:var(--cream-dim);text-decoration:none;font-size:13px;
+    letter-spacing:0.08em;text-transform:uppercase;font-weight:600;
+    transition:color .2s ease;
+  }
+  nav a:hover{color:var(--gold);}
+  .nav-cta{
+    background:var(--ember);color:var(--cream);
+    padding:11px 20px;font-size:12px;font-weight:700;
+    letter-spacing:0.08em;text-transform:uppercase;text-decoration:none;
+  }
+  .nav-toggle{display:none;background:none;border:none;color:var(--cream);font-size:24px;cursor:pointer;}
+
+  /* === HERO === */
+  .hero{
+    position:relative;
+    min-height:100svh;
+    display:flex;align-items:center;
+    padding:0 5%;
+    background:
+      radial-gradient(ellipse 80% 60% at 70% 100%, rgba(192,57,43,0.35), transparent 70%),
+      linear-gradient(180deg, #150f0c 0%, #1c1411 60%);
+    overflow:hidden;
+  }
+  .hero-grain{
+    position:absolute;inset:0;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+    pointer-events:none;
+  }
+  .ember-glow{
+    position:absolute;
+    bottom:-200px;right:-100px;
+    width:600px;height:600px;
+    background:radial-gradient(circle, rgba(232,83,62,0.25) 0%, transparent 70%);
+    filter:blur(40px);
+    animation:pulse 5s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:0.6;transform:scale(1);}50%{opacity:1;transform:scale(1.08);}}
+  .hero-inner{position:relative;z-index:2;max-width:680px;padding-top:80px;}
+  .eyebrow{
+    color:var(--gold);font-size:13px;letter-spacing:0.3em;font-weight:700;
+    margin-bottom:22px;display:flex;align-items:center;gap:10px;
+  }
+  .eyebrow::before{content:"";width:30px;height:1px;background:var(--gold);}
+  .hero h1{
+    font-size:clamp(54px,9vw,108px);
+    line-height:0.88;
+    color:var(--cream);
+  }
+  .hero h1 span{color:var(--ember-bright);display:block;}
+  .hero p.lead{
+    margin-top:26px;max-width:460px;
+    font-size:17px;line-height:1.7;color:var(--cream-dim);
+  }
+  .hero-actions{margin-top:38px;display:flex;gap:16px;flex-wrap:wrap;}
+  .hero-stats{
+    margin-top:64px;display:flex;gap:48px;flex-wrap:wrap;
+    border-top:1px solid var(--line);padding-top:26px;max-width:540px;
+  }
+  .hero-stats div b{display:block;font-family:'Anton',sans-serif;font-size:30px;color:var(--gold);}
+  .hero-stats div span{font-size:12px;color:var(--cream-dim);letter-spacing:0.04em;}
+
+  /* === SECTION SHELL === */
+  section{padding:120px 5%;position:relative;}
+  .section-head{max-width:640px;margin-bottom:60px;}
+  .section-head .eyebrow{margin-bottom:16px;}
+  .section-head h2{font-size:clamp(36px,5.5vw,58px);line-height:0.95;}
+  .section-head p{color:var(--cream-dim);font-size:16px;margin-top:18px;line-height:1.7;}
+
+  /* === CARNES (CUTS) === */
+  .carnes{background:var(--char2);}
+  .cuts-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);}
+  .cut-card{
+    background:var(--char2);padding:34px 28px;
+    transition:background .25s ease;
+    position:relative;
+  }
+  .cut-card:hover{background:#2c211b;}
+  .cut-tag{
+    font-size:11px;letter-spacing:0.12em;color:var(--gold);font-weight:700;
+    text-transform:uppercase;margin-bottom:14px;display:inline-block;
+  }
+  .cut-card h3{font-size:24px;margin-bottom:10px;font-family:'Anton',sans-serif;}
+  .cut-card p{font-size:14px;color:var(--cream-dim);line-height:1.6;margin-bottom:18px;}
+  .cut-foot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:16px;}
+  .cut-price{font-family:'Anton',sans-serif;font-size:20px;color:var(--cream);}
+  .cut-price small{font-family:'Inter',sans-serif;font-size:11px;color:var(--cream-dim);font-weight:400;}
+  .add-btn{
+    width:34px;height:34px;border:1px solid var(--ember);color:var(--ember-bright);
+    background:transparent;font-size:18px;cursor:pointer;line-height:1;
+    transition:all .2s ease;
+  }
+  .add-btn:hover{background:var(--ember);color:var(--cream);}
+
+  /* === GRILL SECTION (signature) === */
+  .grill{
+    background:
+      radial-gradient(ellipse 70% 50% at 50% 0%, rgba(232,83,62,0.18), transparent 70%),
+      #150f0c;
+    text-align:center;
+  }
+  .grill-rack{
+    position:relative;
+    max-width:920px;margin:70px auto 0;
+    display:grid;grid-template-columns:repeat(4,1fr);
+    gap:0;
+  }
+  .skewer{
+    position:relative;padding:0 14px 50px;
+  }
+  .skewer .stick{
+    width:2px;height:140px;background:linear-gradient(to bottom, var(--gold), transparent);
+    margin:0 auto;position:relative;
+  }
+  .skewer .meat{
+    position:absolute;left:50%;transform:translateX(-50%);
+    width:46px;height:30px;border-radius:6px;
+    background:linear-gradient(135deg, #8a3a2c, #3d1c14);
+    box-shadow:inset 0 0 8px rgba(0,0,0,0.5), 0 4px 10px rgba(0,0,0,0.4);
+  }
+  .skewer .meat:nth-child(1){top:10px;}
+  .skewer .label{margin-top:14px;font-size:13px;font-weight:700;letter-spacing:0.05em;color:var(--cream-dim);text-transform:uppercase;}
+  .grill-cta{
+    margin-top:60px;display:inline-flex;flex-direction:column;align-items:center;gap:18px;
+  }
+  .grill-cta p{max-width:480px;color:var(--cream-dim);font-size:15px;line-height:1.7;}
+
+  /* === BEBIDAS (drinks) === */
+  .bebidas{background:var(--char2);}
+  .drinks-layout{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:start;}
+  .drink-card{
+    border:1px solid var(--line);padding:26px;
+    display:flex;flex-direction:column;gap:10px;
+    background:rgba(28,20,17,0.4);
+  }
+  .drink-card h4{font-family:'Anton',sans-serif;font-size:19px;}
+  .drink-card .abv{font-size:11px;color:var(--gold);letter-spacing:0.1em;font-weight:700;}
+  .drink-card p{font-size:13.5px;color:var(--cream-dim);line-height:1.5;}
+  .drinks-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  .verify-note{
+    border-left:3px solid var(--ember);padding:20px 24px;
+    background:rgba(192,57,43,0.08);
+    font-size:14px;color:var(--cream-dim);line-height:1.7;
+  }
+  .verify-note b{color:var(--cream);}
+
+  /* === HOW IT WORKS === */
+  .how{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;}
+  .how-step{border-top:2px solid var(--ember);padding-top:22px;}
+  .how-step .num{font-family:'Anton',sans-serif;font-size:14px;color:var(--gold);letter-spacing:0.1em;}
+  .how-step h3{font-size:24px;margin:12px 0 10px;}
+  .how-step p{color:var(--cream-dim);font-size:14.5px;line-height:1.65;}
+
+  /* === FOOTER === */
+  footer{
+    background:#100a08;padding:80px 5% 30px;
+    border-top:1px solid var(--line);
+  }
+  .footer-top{
+    display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:40px;
+    padding-bottom:50px;border-bottom:1px solid var(--line);
+  }
+  .footer-top h3{font-size:14px;letter-spacing:0.1em;color:var(--gold);margin-bottom:18px;text-transform:uppercase;}
+  .footer-top p, .footer-top a{font-size:14px;color:var(--cream-dim);line-height:2;text-decoration:none;display:block;}
+  .footer-top a:hover{color:var(--cream);}
+  .footer-bottom{
+    display:flex;justify-content:space-between;align-items:center;padding-top:26px;
+    font-size:12px;color:#6b5c4f;flex-wrap:wrap;gap:12px;
+  }
+
+  @media(max-width:860px){
+    nav ul{display:none;}
+    .nav-toggle{display:block;}
+    .cuts-grid{grid-template-columns:1fr 1fr;}
+    .drinks-layout{grid-template-columns:1fr;}
+    .how{grid-template-columns:1fr;}
+    .footer-top{grid-template-columns:1fr 1fr;}
+    .grill-rack{grid-template-columns:repeat(2,1fr);row-gap:30px;}
+  }
+  @media(max-width:520px){
+    .cuts-grid{grid-template-columns:1fr;}
+    .footer-top{grid-template-columns:1fr;}
+    .hero-stats{gap:30px;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important;transition:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<!-- AGE GATE -->
+<div id="ageGate">
+  <div class="gate-card">
+    <div class="gate-ember">BRASA · BEBIDAS</div>
+    <h2>Antes de entrar,<br>uma pergunta.</h2>
+    <p>This part of the site sells beer and drinks. You need to be 18 or older to continue.</p>
+    <div class="gate-btns">
+      <button class="btn btn-primary" onclick="ageConfirm(true)">I'm 18 or older</button>
+      <button class="btn btn-ghost" onclick="ageConfirm(false)">I'm under 18</button>
+    </div>
+    <div class="gate-denied" id="gateDenied">This site sells alcohol and isn't available to you right now.</div>
+    <div class="gate-fine">By entering you confirm you're of legal drinking age in your country.</div>
+  </div>
+</div>
+
+<header>
+  <a href="#" class="logo"><span class="ember-dot"></span>BRASA</a>
+  <nav><ul>
+    <li><a href="#carnes">Carnes</a></li>
+    <li><a href="#grelha">Grelha</a></li>
+    <li><a href="#bebidas">Bebidas</a></li>
+    <li><a href="#como">Como funciona</a></li>
+  </ul></nav>
+  <a href="#carnes" class="nav-cta">Pedir agora</a>
+  <button class="nav-toggle">☰</button>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grain"></div>
+  <div class="ember-glow"></div>
+  <div class="hero-inner">
+    <div class="eyebrow">AÇOUGUE & CHURRASCO</div>
+    <h1>FOGO NO<span>PICANHA.</span></h1>
+    <p class="lead">Carnes selecionadas direto do açougue, cortes nobres para sua churrasqueira, e a cerveja gelada chegando junto. Sabor brasileiro, entregue na sua porta.</p>
+    <div class="hero-actions">
+      <a href="#carnes" class="btn btn-primary">Ver cortes</a>
+      <a href="#bebidas" class="btn btn-ghost">Pedir bebidas →</a>
+    </div>
+    <div class="hero-stats">
+      <div><b>24</b><span>cortes nobres</span></div>
+      <div><b>45min</b><span>entrega média</span></div>
+      <div><b>4.9★</b><span>avaliação dos clientes</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- CARNES -->
+<section class="carnes" id="carnes">
+  <div class="section-head">
+    <div class="eyebrow">O AÇOUGUE</div>
+    <h2>Cortes para todo<br>tipo de fogo.</h2>
+    <p>Carne fresca, maturada e pesada na hora. Escolha o corte, a gramatura e deixe o resto com a brasa.</p>
+  </div>
+  <div class="cuts-grid">
+    <div class="cut-card">
+      <span class="cut-tag">Clássico</span>
+      <h3>Picanha</h3>
+      <p>O corte mais brasileiro de todos — capa de gordura generosa, ideal pro espeto inteiro.</p>
+      <div class="cut-foot"><span class="cut-price">89 zł <small>/kg</small></span><button class="add-btn">+</button></div>
+    </div>
+    <div class="cut-card">
+      <span class="cut-tag">Para grelha</span>
+      <h3>Fraldinha</h3>
+      <p>Macia, suculenta, perfeita fatiada fina e rápida na chapa quente.</p>
+      <div class="cut-foot"><span class="cut-price">62 zł <small>/kg</small></span><button class="add-btn">+</button></div>
+    </div>
+    <div class="cut-card">
+      <span class="cut-tag">Costela longa</span>
+      <h3>Costela Ripa</h3>
+      <p>Horas de fogo baixo. Cai do osso, sabor profundo de churrasco de fim de semana.</p>
+      <div class="cut-foot"><span class="cut-price">54 zł <small>/kg</small></span><button class="add-btn">+</button></div>
+    </div>
+    <div class="cut-card">
+      <span class="cut-tag">Premium</span>
+      <h3>Maminha</h3>
+      <p>Magra por fora, macia por dentro. Sal grosso e brasa alta, só isso.</p>
+      <div class="cut-foot"><span class="cut-price">71 zł <small>/kg</small></span><button class="add-btn">+</button></div>
+    </div>
+    <div class="cut-card">
+      <span class="cut-tag">Linguiça</span>
+      <h3>Linguiça Toscana</h3>
+      <p>Feita na casa, tempero próprio, pedida certa pra abrir o churrasco.</p>
+      <div class="cut-foot"><span class="cut-price">28 zł <small>/kg</small></span><button class="add-btn">+</button></div>
+    </div>
+    <div class="cut-card">
+      <span class="cut-tag">Frango</span>
+      <h3>Coração de Frango</h3>
+      <p>Pequeno, rápido, viciante — o petisco que some primeiro na grelha.</p>
+      <div class="cut-foot"><span class="cut-price">22 zł <small>/kg</small></span><button class="add-btn">+</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- GRELHA (signature grill section) -->
+<section class="grill" id="grelha">
+  <div class="eyebrow" style="justify-content:center;">A GRELHA</div>
+  <h2 style="font-size:clamp(34px,5.5vw,56px);">Monte seu espeto.</h2>
+  <p style="color:var(--cream-dim);max-width:480px;margin:18px auto 0;font-size:15.5px;line-height:1.7;">
+    Combine cortes, pimentões e cebola num só espeto — pronto pra sua churrasqueira, sem trabalho nenhum no açougue.
+  </p>
+
+  <div class="grill-rack">
+    <div class="skewer"><div class="stick"><div class="meat"></div></div><div class="label">Picanha</div></div>
+    <div class="skewer"><div class="stick"><div class="meat"></div></div><div class="label">Frango</div></div>
+    <div class="skewer"><div class="stick"><div class="meat"></div></div><div class="label">Linguiça</div></div>
+    <div class="skewer"><div class="stick"><div class="meat"></div></div><div class="label">Misto</div></div>
+  </div>
+
+  <div class="grill-cta">
+    <p>Kits de churrasco prontos para 4, 8 ou 12 pessoas — carne, carvão e tudo que falta na sua mesa.</p>
+    <a href="#" class="btn btn-primary">Montar kit de churrasco</a>
+  </div>
+</section>
+
+<!-- BEBIDAS -->
+<section class="bebidas" id="bebidas">
+  <div class="section-head">
+    <div class="eyebrow">BEBIDAS · 18+</div>
+    <h2>Cerveja gelada<br>junto com a carne.</h2>
+    <p>Peça sua cerveja e bebidas junto do pedido de carne. Verificamos idade na entrega.</p>
+  </div>
+
+  <div class="drinks-layout">
+    <div class="drinks-grid">
+      <div class="drink-card">
+        <h4>Cerveja Pilsen 600ml</h4>
+        <span class="abv">4.7% ABV</span>
+        <p>Gelada na entrega, garrafa retornável.</p>
+      </div>
+      <div class="drink-card">
+        <h4>Chopp Artesanal Lata</h4>
+        <span class="abv">5.2% ABV</span>
+        <p>Produção local, leve e refrescante.</p>
+      </div>
+      <div class="drink-card">
+        <h4>Caipirinha Pronta</h4>
+        <span class="abv">12% ABV</span>
+        <p>Limão, cachaça e açúcar — só abrir e servir.</p>
+      </div>
+      <div class="drink-card">
+        <h4>Guaraná Gelado</h4>
+        <span class="abv">0% ABV</span>
+        <p>Pra quem não bebe — ou pra quem vai dirigir.</p>
+      </div>
+    </div>
+    <div class="verify-note">
+      <b>Verificação de idade na entrega.</b><br>
+      Nosso entregador confere documento com foto no momento da entrega de qualquer pedido com álcool. Pedidos sem confirmação válida não são entregues e bebidas não são reembolsadas após a entrega ser recusada por essa razão.
+    </div>
+  </div>
+</section>
+
+<!-- COMO FUNCIONA -->
+<section class="how" id="como">
+  <div class="how-step">
+    <div class="num">01 — ESCOLHA</div>
+    <h3>Carne e bebida</h3>
+    <p>Monte seu pedido com cortes do açougue e, se quiser, adicione cerveja ou drinks ao carrinho.</p>
+  </div>
+  <div class="how-step">
+    <div class="num">02 — CONFIRME</div>
+    <h3>Idade na entrega</h3>
+    <p>Pedidos com álcool exigem confirmação de maioridade com documento na hora da entrega.</p>
+  </div>
+  <div class="how-step">
+    <div class="num">03 — RECEBA</div>
+    <h3>Fresco e gelado</h3>
+    <p>Carne fresca, bebida gelada, entrega em até 45 minutos na sua região.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-top">
+    <div>
+      <a href="#" class="logo" style="margin-bottom:14px;"><span class="ember-dot"></span>BRASA</a>
+      <p style="max-width:260px;">Açougue e adega de bairro com alma brasileira. Carne fresca, bebida gelada, fogo de verdade.</p>
+    </div>
+    <div>
+      <h3>Loja</h3>
+      <a href="#carnes">Carnes</a>
+      <a href="#grelha">Grelha</a>
+      <a href="#bebidas">Bebidas</a>
+    </div>
+    <div>
+      <h3>Informações</h3>
+      <a href="#">Entrega e prazos</a>
+      <a href="#">Política de álcool 18+</a>
+      <a href="#">Fale conosco</a>
+    </div>
+    <div>
+      <h3>Horário</h3>
+      <p>Ter–Dom: 10h – 22h</p>
+      <p>Segunda: fechado</p>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 Brasa Açougue & Adega.</span>
+    <span>Venda de álcool restrita a maiores de 18 anos.</span>
+  </div>
+</footer>
+
+<script>
+  function ageConfirm(isAdult){
+    if(isAdult){
+      document.getElementById('ageGate').classList.add('hidden');
+    } else {
+      document.getElementById('gateDenied').style.display = 'block';
+      document.querySelectorAll('.gate-btns .btn').forEach(b => b.style.display = 'none');
+    }
+  }
+</script>
+
+</body>
+</html>
